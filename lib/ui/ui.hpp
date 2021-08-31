@@ -1,4 +1,6 @@
 #define LGFX_USE_V1
+#define FONT_HEIGHT (8)
+#define FONT_WIDTH (6)
 #include <LovyanGFX.hpp>
 #include <vector>
 #include <string>
@@ -25,6 +27,7 @@ namespace ui
     public:
         virtual ~Object() = 0;
         virtual void draw();
+        virtual void drawoutline();
         virtual void select(bool selected);
         void (*action)(UI *);
         int x, y, w, h, selectedcolor;

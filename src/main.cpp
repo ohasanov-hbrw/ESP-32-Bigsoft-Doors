@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <ui.hpp>
+#include <io.hpp>
+
+
 #define SCREEN_HEIGHT (320)
 #define SCREEN_WIDTH (240)
 void setup()
@@ -26,7 +29,7 @@ void setup()
                 ui->tft.setTextSize(2);
                 ui->tft.print("Menu");
             }),
-            new ui::TextButton(SCREEN_WIDTH/2, SCREEN_HEIGHT-26, "keyboard", 2, TFT_GREEN, TFT_BLACK, TFT_WHITE, ui, [](ui::UI *ui)
+            new ui::TextButton(SCREEN_WIDTH/2, SCREEN_HEIGHT-26, "keyboard", 2, TFT_GREEN, TFT_BLACK, TFT_BLACK, ui, [](ui::UI *ui)
             {
                 Serial.println("Keyb:");
                 ui->tft.setCursor(20, 150);
@@ -36,18 +39,25 @@ void setup()
             })
         })
     });
+    pcfinit();
     ui->init();
     interface->draw();
-    delay(2000);
-    interface->cycle(1);
-    interface->clickcontainer();
-    delay(2000);
-    interface->cycle(1);
-    interface->clickcontainer();
-    delay(2000);
-    interface->cyclecontainer(1);
-    interface->clickcontainer();
-    while (true);
+    while (true){
+        unsigned int buttonstates = readallbuttons();
+        if(buttonstates & 0b1){
+            interface->clickcontainer();
+        }
+        if(buttonstates & 0b10){
+            interface->cyclecontainer(1);
+        }
+        if(buttonstates & 0b100){
+            interface->cycle(1);
+        }
+        if(buttonstates & 0b1000){
+            interface->selectcontainer(-1);
+        }
+        delay(50); //need this delay or the pcf chip freaks out
+    }
 }
 
 void loop()

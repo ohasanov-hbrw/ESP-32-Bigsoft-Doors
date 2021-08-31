@@ -53,33 +53,27 @@ ui::Object::~Object() {}
 void ui::Object::draw()
 {
     this->ui->tft.fillRect(this->x, this->y, this->w, this->h, TFT_BLACK);
-    this->selected &&[&]()
-    {
-        this->ui->tft.drawRect(this->x, this->y, this->w, this->h, TFT_WHITE);
-        return false;
-    }();
+    this->drawoutline();
 }
 
 void ui::StaticButton::draw()
 {
     this->ui->tft.fillRect(this->x, this->y, this->w, this->h, this->color);
-    if(this->selected)
-    {
-        this->ui->tft.drawRect(this->x, this->y, this->w, this->h, this->selectedcolor);
-    }
+    this->drawoutline();
 }
 
 void ui::TextButton::draw()
 {
     this->ui->tft.setCursor(this->x, this->y);
-    this->ui->tft.setTextSize(this->h);
+    this->ui->tft.setTextSize(this->h/FONT_HEIGHT);
     this->ui->tft.setTextColor(this->textcolor);
-    this->ui->tft.fillRect(this->x, this->y, this->ui->tft.getTextSizeX()*this->text.length(), this->ui->tft.getTextSizeY(), this->color);
+    this->ui->tft.fillRect(this->x, this->y, this->w, this->h, this->color);
     this->ui->tft.print(this->text.c_str());
-    if(this->selected)
-    {
-        this->ui->tft.drawRect(this->x, this->y, this->w, this->h, this->selectedcolor);
-    }
+    this->drawoutline();
+}
+
+void ui::Object::drawoutline(){
+    if(this->selected) this->ui->tft.drawRect(this->x, this->y, this->w, this->h, this->selectedcolor);
 }
 
 void ui::Object::select(bool selected)
@@ -109,8 +103,8 @@ ui::TextButton::TextButton(int x, int y, std::string text, int h, int color, int
     selected = false;
     this->x = x;
     this->y = y;
-    this->w = w;
-    this->h = h;
+    this->w = h*(text.length())*FONT_WIDTH;
+    this->h = h*FONT_HEIGHT;
     this->ui = ui;
     this->action = action;
     this->color = color;
