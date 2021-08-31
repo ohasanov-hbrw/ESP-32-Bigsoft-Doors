@@ -19,34 +19,42 @@ namespace ui
         void init();
         LGFX tft;
     };
-    class Button
+    class Object
     {
     public:
-        virtual ~Button() = 0;
+        virtual ~Object() = 0;
         virtual void draw();
         virtual void select(bool selected);
+        void (*action)(UI *);
         int x, y, w, h;
         bool selected;
         UI *ui;
     };
-    class StaticButton : public virtual Button
+    class StaticButton : public virtual Object
     {
     public:
-        StaticButton(int x, int y, int w, int h, UI *ui);
+        StaticButton(int x, int y, int w, int h, UI *ui, void (*action)(UI *));
     };
-    class Buttons
+    class Container
     {
     public:
-        std::vector<Button*> buttons;
-        Buttons(std::vector<Button*> buttons);
+        std::vector<Object *> objects;
+        Container(std::vector<Object *> objects);
+        int index;
         void draw();
+        void cycle(int cycles);
+        void click();
     };
     class Interface
     {
     public:
-        Interface(UI *ui, Buttons *buttons);
+        Interface(UI *ui, std::vector<Container *> container);
         UI *ui;
-        Buttons *buttons;
+        int selectedcontainer = -1;
+        std::vector<Container *> container;
+        void cycle(int cycles);
+        void cyclecontainer(int cycles);
+        void clickcontainer();
         void draw();
     };
 }
