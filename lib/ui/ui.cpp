@@ -48,25 +48,28 @@ LGFX::LGFX(void)
     setPanel(&_panel_instance);
 }
 
-ui::Button::~Button() {}
+ui::Object::~Object() {}
 
-void ui::Button::draw()
+void ui::Object::draw()
 {
     this->ui->tft.fillRect(this->x, this->y, this->w, this->h, TFT_BLUE);
-    this->selected && [&]() {
+    this->selected &&[&]()
+    {
         this->ui->tft.drawRect(this->x, this->y, this->w, this->h, TFT_WHITE);
         return false;
     }();
 }
 
-void ui::Button::select(bool selected) {
-    if(this->selected != selected){
+void ui::Object::select(bool selected)
+{
+    if (this->selected != selected)
+    {
         this->selected = selected;
         this->draw();
     }
 }
 
-ui::StaticButton::StaticButton(int x, int y, int w, int h, UI *ui)
+ui::StaticButton::StaticButton(int x, int y, int w, int h, UI *ui, void (*action)(UI *))
 {
     selected = false;
     this->x = x;
@@ -74,6 +77,7 @@ ui::StaticButton::StaticButton(int x, int y, int w, int h, UI *ui)
     this->w = w;
     this->h = h;
     this->ui = ui;
+    this->action = action;
 }
 
 ui::UI::UI(){};
@@ -85,24 +89,57 @@ void ui::UI::init()
     this->tft.fillScreen(TFT_RED);
 };
 
-ui::Buttons::Buttons(std::vector<Button*> buttons)
+ui::Container::Container(std::vector<Object *> objects)
 {
-    this->buttons = buttons;
+    this->objects = objects;
+    this->index = -1;
 }
 
-void ui::Buttons::draw()
+void ui::Container::draw()
 {
-    for (auto button : this->buttons)
-    {   
-        button->draw();
-    }
+    for (auto thing : this->objects)
+        thing->draw();
 }
 
-ui::Interface::Interface(UI *ui, Buttons *buttons)
+ui::Interface::Interface(UI *ui, std::vector<Container *> container)
 {
-    this->buttons = buttons;
+    this->container = container;
     this->ui = ui;
 }
-void ui::Interface::draw(){
-    this->buttons->draw();
+void ui::Interface::draw()
+{
+    for (auto thing : this->container)
+        thing->draw();
+}
+
+void ui::Container::cycle(int cycles)
+{
+    if (this->index >= 0)
+        this->objects[this->index]->select(false);
+    this->index = (this->index + cycles) % this->objects.size();
+    this->objects[this->index]->select(true);
+}
+
+void ui::Container::click()
+{
+    if (this->index < 0 || this->index >= this->objects.size())
+        return;
+    this->objects[this->index]->action(this->objects[index]->ui);
+}
+
+void ui::Interface::cycle(int cycles)
+{
+    this->selectedcontainer = (this->selectedcontainer + cycles) % this->container.size();
+}
+
+void ui::Interface::cyclecontainer(int cycles)
+{
+    if (this->selectedcontainer >= 0 && this->selectedcontainer < this->container.size())
+        this->container[this->selectedcontainer]->cycle(cycles);
+}
+
+void ui::Interface::clickcontainer()
+{
+    if (this->selectedcontainer >= 0 && this->selectedcontainer < this->container.size())
+        this->container[this->selectedcontainer]->click();
 }
