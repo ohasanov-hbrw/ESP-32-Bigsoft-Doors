@@ -1,6 +1,7 @@
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 #include <vector>
+#include <string>
 class LGFX : public lgfx::LGFX_Device
 {
     lgfx::Panel_ILI9341 _panel_instance;
@@ -26,21 +27,35 @@ namespace ui
         virtual void draw();
         virtual void select(bool selected);
         void (*action)(UI *);
-        int x, y, w, h;
+        int x, y, w, h, selectedcolor;
         bool selected;
         UI *ui;
     };
     class StaticButton : public virtual Object
     {
     public:
-        StaticButton(int x, int y, int w, int h, UI *ui, void (*action)(UI *));
+        StaticButton(int x, int y, int w, int h, int color, int selectedcolor, UI *ui, void (*action)(UI *));
+        int color;
+        void draw() override;
+    };
+    class TextButton : public virtual Object
+    {
+    public:
+        TextButton(int x, int y, std::string text, int h, int color, int selectedcolor, int textcolor, UI *ui, void (*action)(UI *));
+        std::string text;
+        int textcolor;
+        int color;
+        void draw() override;
     };
     class Container
     {
     public:
         std::vector<Object *> objects;
         Container(std::vector<Object *> objects);
+
         int index;
+        void selectindex(int index);
+        void deselect();
         void draw();
         void cycle(int cycles);
         void click();
@@ -53,6 +68,7 @@ namespace ui
         int selectedcontainer = -1;
         std::vector<Container *> container;
         void cycle(int cycles);
+        void selectcontainer(int selectedcontainer);
         void cyclecontainer(int cycles);
         void clickcontainer();
         void draw();

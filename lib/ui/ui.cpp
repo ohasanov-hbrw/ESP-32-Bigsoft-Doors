@@ -52,12 +52,34 @@ ui::Object::~Object() {}
 
 void ui::Object::draw()
 {
-    this->ui->tft.fillRect(this->x, this->y, this->w, this->h, TFT_BLUE);
+    this->ui->tft.fillRect(this->x, this->y, this->w, this->h, TFT_BLACK);
     this->selected &&[&]()
     {
         this->ui->tft.drawRect(this->x, this->y, this->w, this->h, TFT_WHITE);
         return false;
     }();
+}
+
+void ui::StaticButton::draw()
+{
+    this->ui->tft.fillRect(this->x, this->y, this->w, this->h, this->color);
+    if(this->selected)
+    {
+        this->ui->tft.drawRect(this->x, this->y, this->w, this->h, this->selectedcolor);
+    }
+}
+
+void ui::TextButton::draw()
+{
+    this->ui->tft.setCursor(this->x, this->y);
+    this->ui->tft.setTextSize(this->h);
+    this->ui->tft.setTextColor(this->textcolor);
+    this->ui->tft.fillRect(this->x, this->y, this->ui->tft.getTextSizeX()*this->text.length(), this->ui->tft.getTextSizeY(), this->color);
+    this->ui->tft.print(this->text.c_str());
+    if(this->selected)
+    {
+        this->ui->tft.drawRect(this->x, this->y, this->w, this->h, this->selectedcolor);
+    }
 }
 
 void ui::Object::select(bool selected)
@@ -69,7 +91,7 @@ void ui::Object::select(bool selected)
     }
 }
 
-ui::StaticButton::StaticButton(int x, int y, int w, int h, UI *ui, void (*action)(UI *))
+ui::StaticButton::StaticButton(int x, int y, int w, int h, int color, int selectedcolor, UI *ui, void (*action)(UI *))
 {
     selected = false;
     this->x = x;
@@ -78,6 +100,23 @@ ui::StaticButton::StaticButton(int x, int y, int w, int h, UI *ui, void (*action
     this->h = h;
     this->ui = ui;
     this->action = action;
+    this->color = color;
+    this->selectedcolor = selectedcolor;
+}
+
+ui::TextButton::TextButton(int x, int y, std::string text, int h, int color, int selectedcolor, int textcolor, UI *ui, void (*action)(UI *))
+{
+    selected = false;
+    this->x = x;
+    this->y = y;
+    this->w = w;
+    this->h = h;
+    this->ui = ui;
+    this->action = action;
+    this->color = color;
+    this->selectedcolor = selectedcolor;
+    this->text = text;
+    this->textcolor = textcolor;
 }
 
 ui::UI::UI(){};
@@ -116,8 +155,10 @@ void ui::Container::cycle(int cycles)
 {
     if (this->index >= 0)
         this->objects[this->index]->select(false);
-    this->index = (this->index + cycles) % this->objects.size();
-    this->objects[this->index]->select(true);
+    if(this->objects.size() > 0){
+        this->index = (this->index + cycles) % this->objects.size();
+        this->objects[this->index]->select(true);
+    }
 }
 
 void ui::Container::click()
@@ -129,7 +170,11 @@ void ui::Container::click()
 
 void ui::Interface::cycle(int cycles)
 {
-    this->selectedcontainer = (this->selectedcontainer + cycles) % this->container.size();
+    if (this->selectedcontainer >= 0) this->container[selectedcontainer]->deselect();
+    if (this->container.size() > 0){
+        this->selectedcontainer = (this->selectedcontainer + cycles) % this->container.size();
+        this->container[this->selectedcontainer]->cycle(1);
+    }
 }
 
 void ui::Interface::cyclecontainer(int cycles)
@@ -142,4 +187,17 @@ void ui::Interface::clickcontainer()
 {
     if (this->selectedcontainer >= 0 && this->selectedcontainer < this->container.size())
         this->container[this->selectedcontainer]->click();
+}
+
+void ui::Container::deselect(){
+    if(this->index >= 0) this->objects[index]->select(false);
+    this->index = -1;
+}
+
+void ui::Interface::selectcontainer(int selectedcontainer){
+    if(this->container.size() > 0) this->selectedcontainer = selectedcontainer % this->container.size();
+}
+
+void ui::Container::selectindex(int index){
+    if(this->objects.size() > 0) this->index = index % this->objects.size();
 }
